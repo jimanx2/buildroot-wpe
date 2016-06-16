@@ -32,6 +32,7 @@ define MONO_INSTALL_LIBS
 	rsync -av --exclude=*.so --exclude=*.mdb \
 		$(HOST_DIR)/usr/lib/mono $(TARGET_DIR)/usr/lib/
 	rsync -av $(HOST_DIR)/etc/mono $(TARGET_DIR)/etc
+	$(HOST_DIR)/usr/bin/mozroots --import --url https://hg.mozilla.org/mozilla-central/raw-file/tip/security/nss/lib/ckfw/builtins/certdata.txt --sync
 endef
 
 MONO_POST_INSTALL_TARGET_HOOKS += MONO_INSTALL_LIBS
