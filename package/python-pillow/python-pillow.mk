@@ -1,31 +1,39 @@
 ################################################################################
 #
-# python-bottle
+# python-pillow
 #
 ################################################################################
 
-PYTHON_PILLOW_VERSION = 2.1.0
-PYTHON_PILLOW_SOURCE = Pillow-$(PYTHON_PILLOW_VERSION).zip
+PYTHON_PILLOW_VERSION = 3.2.0
+PYTHON_PILLOW_SOURCE = Pillow-$(PYTHON_PILLOW_VERSION).tar.gz
 PYTHON_PILLOW_SITE = https://pypi.python.org/packages/source/P/Pillow
-PYTHON_PILLOW_DEPENDENCIES = python zlib freetype jpeg tiff host-python-setuptools host-python-distutilscross
+PYTHON_PILLOW_SETUP_TYPE = setuptools
+PYTHON_PILLOW_DEPENDENCIES = $(if $(BR2_PACKAGE_JPEG),jpeg) \
+      $(if $(BR2_PACKAGE_ZLIB),zlib) \
+      $(if $(BR2_PACKAGE_TIFF),tiff) \
+      $(if $(BR2_PACKAGE_FREETYPE),freetype) \
+      $(if $(BR2_PACKAGE_WEBP),webp) \
+      $(if $(BR2_PACKAGE_OPENJPEG),openjpeg)
 
-define PYTHON_PILLOW_EXTRACT_CMDS
-	(unzip $(DL_DIR)/$(PYTHON_PILLOW_SOURCE) -d $(BUILD_DIR); \
-	mv $(BUILD_DIR)/Pillow-$(PYTHON_PILLOW_VERSION)/* $(@D))
-endef
+PYTHON_PILLOW_BUILD_OPTS += --disable-platform-guessing
+PYTHON_PILLOW_BUILD_OPTS += $(if $(BR2_PACKAGE_JPEG),--enable-jpeg,--disable-jpeg)
+PYTHON_PILLOW_BUILD_OPTS += $(if $(BR2_PACKAGE_ZLIB),--enable-zlib,--disable-zlib)
+PYTHON_PILLOW_BUILD_OPTS += $(if $(BR2_PACKAGE_TIFF),--enable-tiff,--disable-tiff)
+PYTHON_PILLOW_BUILD_OPTS += $(if $(BR2_PACKAGE_FREETYPE),--enable-freetype,--disable-freetype)
+PYTHON_PILLOW_BUILD_OPTS += $(if $(BR2_PACKAGE_WEBP),--enable-webp,--disable-webp)
+PYTHON_PILLOW_BUILD_OPTS += $(if $(BR2_PACKAGE_OPENJPEG),--enable-jpeg2000,--disable-jpeg2000)
 
-define PYTHON_PILLOW_BUILD_CMDS
-	(cd $(@D); \
-		PYTHONXCPREFIX="$(STAGING_DIR)/usr/" \
-		LDFLAGS="-L$(STAGING_DIR)/lib -L$(STAGING_DIR)/usr/lib" \
-	$(HOST_DIR)/usr/bin/python setup.py build -x build_ext --disable-lcms --disable-webp)
-endef
+PYTHON_PILLOW_INSTALL_TARGET_OPTS += $(PYTHON_PILLOW_BUILD_OPTS)
 
-define PYTHON_PILLOW_INSTALL_TARGET_CMDS
-	(cd $(@D); \
-	PYTHONPATH=$(TARGET_DIR)/usr/lib/python$(PYTHON_VERSION_MAJOR)/site-packages \
-	$(HOST_DIR)/usr/bin/python setup.py install \
-	--single-version-externally-managed --root=/ --prefix=$(TARGET_DIR)/usr)
-endef
+PYTHON_PILLOW_BUILD_CMDS = (cd $(PYTHON_PILLOW_BUILDDIR); \
+		$(PYTHON_PILLOW_BASE_ENV) $(PYTHON_PILLOW_ENV) \
+		$(PYTHON_PILLOW_PYTHON_INTERPRETER) setup.py build_ext \
+		$(PYTHON_PILLOW_BASE_BUILD_OPTS) $(PYTHON_PILLOW_BUILD_OPTS))
 
-$(eval $(generic-package))
+PYTHON_PILLOW_INSTALL_TARGET_CMDS = (cd $(PYTHON_PILLOW_BUILDDIR); \
+		$(PYTHON_PILLOW_BASE_ENV) $(PYTHON_PILLOW_ENV) \
+		$(PYTHON_PILLOW_PYTHON_INTERPRETER) setup.py build_ext \
+		$(PYTHON_PILLOW_INSTALL_TARGET_OPTS) install \
+		$(PYTHON_PILLOW_BASE_INSTALL_TARGET_OPTS))
+
+$(eval $(python-package))
